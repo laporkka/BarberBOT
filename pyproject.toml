@@ -1,5 +1,5 @@
 [project]
-name = "app"
+name = "barberbot"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -7,7 +7,18 @@ authors = [
     { name = "laporkka", email = "alexsolodkiy2008@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "aiogram>=3.31.0",
+    "alembic>=1.20.1",
+    "asyncpg>=0.32.0",
+    "fastapi>=0.162.0",
+    "pydantic-settings>=2.16.1",
+    "sqlalchemy[asyncio]>=2.1.6",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[tool.uv]
+package = false
 
 [project.scripts]
 app = "app:main"
