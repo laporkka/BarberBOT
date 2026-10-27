@@ -1,11 +1,23 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
+# Виртуальное окружение
+.venv/
+venv/
+ENV/
+env/
 
-# Virtual environments
-.venv
+# Секреты и конфигурация окружения
 .env
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Системный мусор ОС
+.DS_Store
+Thumbs.db
+
+# Контейнеры и локальные базы (если вдруг создаешь sqlite локально для тестов)
+*.db
+*.sqlite3
