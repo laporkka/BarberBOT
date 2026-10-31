@@ -10,7 +10,7 @@ class BarberCreate(BaseModel):
 class BarberResponse(BaseModel):
     id: int
     name: str
-    tg_id: int
+    tg_id: str
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)

@@ -32,3 +32,12 @@ class ServiceRepository:
             service = result.scalar_one_or_none()
     
             return service
+
+    
+    async def get_service_by_title(self, service_title: str) -> Service | None:
+        query = select(Service).filter(Service.title == service_title)
+        result = await self.db.execute(query)
+        service = result.scalar_one_or_none()
+
+        return service 
+    
