@@ -15,7 +15,7 @@ class AppointmentCreate(BaseModel):
 
 class AppointmentResponse(BaseModel):
     id: int
-    customer_tg_id: int
+    customer_tg_id: str
     customer_name: str
     customer_phone: str
     barber_id: int

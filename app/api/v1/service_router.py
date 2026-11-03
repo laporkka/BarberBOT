@@ -9,7 +9,7 @@ from app.repositories.service import ServiceRepository
 router = APIRouter(prefix="/service", tags=["Service"])
 
 
-@router.post("/add/sevice", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/add/service", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_service(
     service_in: ServiceCreate,
     db: AsyncSession = Depends(get_db)

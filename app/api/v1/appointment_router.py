@@ -12,7 +12,7 @@ from app.services.schedule import ScheduleService
 router = APIRouter(prefix="/appointment", tags=["Appointment"])
 
 
-@router.post("/add/record", response_model=AppointmentResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/add/appointment", response_model=AppointmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_record(
     appointment_in: AppointmentCreate,
     db: AsyncSession = Depends(get_db)
@@ -40,3 +40,12 @@ async def get_available_time(
     
     available_time = await ScheduleService(appointment_repo).get_available_time(duration_min, barber_id, target_data)
     return available_time
+
+
+@router.get("/get/by_tg_id/{customer_tg_id}", response_model=list[AppointmentResponse], status_code=status.HTTP_200_OK)
+async def get_client_appointments(
+    customer_tg_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    appointments = await AppointmentRepository(db).get_appointments_by_tg_id(customer_tg_id)
+    return appointments

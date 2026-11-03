@@ -31,8 +31,8 @@ class AppointmentRepository:
 
         return appointment
 
-    async def get_appointments_by_tg_id(self, appointment_tg_id: int) -> Sequence[Appointment]:
-        query = select(Appointment).filter(Appointment.customer_tg_id == appointment_tg_id)
+    async def get_appointments_by_tg_id(self, customer_tg_id: str) -> Sequence[Appointment]:
+        query = select(Appointment).filter(Appointment.customer_tg_id == customer_tg_id)
         result = await self.db.execute(query)
         appointments = result.scalars().all()
 
