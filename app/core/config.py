@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = 5432
 
     BOT_TOKEN: str
+    ADMIN_IDS: list[str]
 
     @property
     def postgres_url(self) -> str:
