@@ -12,8 +12,8 @@ from app.bot.handlers.start import router as start_router
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=settings.BOT_TOKEN)
-dp = Dispatcher()
 storage = MemoryStorage()
+dp = Dispatcher(storage=storage)
 
 dp.include_router(start_router)
 
