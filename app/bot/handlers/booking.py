@@ -1,7 +1,7 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta, timezone
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 
 from app.bot.fsm import BookingState
 from app.bot.utils.api_client import api_client
@@ -92,6 +92,9 @@ async def date_selected(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
     selected_date = callback.data.split("_")[1]
+
+    date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    
     user_data = await state.get_data()
     duration_min = user_data.get("duration_min")
     barber_id = user_data.get("barber_id")
@@ -99,7 +102,7 @@ async def date_selected(callback: types.CallbackQuery, state: FSMContext):
     available_slots = await api_client.get_available_time(
         duration_min=duration_min,
         barber_id=barber_id,
-        target_data=selected_date
+        target_data=date_obj
     )
 
     await state.update_data(selected_date=selected_date)
@@ -126,9 +129,7 @@ async def time_selected(callback: types.CallbackQuery, state: FSMContext):
 
 
 @router.message(BookingState.get_name)
-async def name_selected(message: Message, callback: types.CallbackQuery, state: FSMContext):
-    await callback.answer()
-
+async def name_selected(message: Message, state: FSMContext):
     client_name = message.text
 
     await state.update_data(customer_name=client_name)
@@ -139,4 +140,46 @@ async def name_selected(message: Message, callback: types.CallbackQuery, state: 
     await message.answer(
         text=f"Принят, {client_name}! Теперь отправьте ваш номер телефона, нажав на кнопку ниже:",
         reply_markup=markup
+    )
+
+
+@router.message(BookingState.get_phone, F.contact)
+async def phone_selected(message: Message, state: FSMContext):
+    customer_phone = message.contact.phone_number
+    customer_tg_id = message.from_user.id
+
+    user_data = await state.get_data()
+    customer_name = user_data.get("customer_name")
+    barber_id = user_data.get("barber_id")
+    service_id = user_data.get("service_id")
+    selected_date = user_data.get("selected_date") 
+    selected_time = user_data.get("selected_time") 
+
+    start_at_datetime = datetime.fromisoformat(f"{selected_date}T{selected_time}:00")
+
+    appointment = await api_client.create_appointment(
+        customer_tg_id=customer_tg_id,
+        customer_name=customer_name,
+        customer_phone=customer_phone,
+        barber_id=barber_id,
+        service_id=service_id,
+        start_at=start_at_datetime
+    )
+
+    if not appointment:
+        await message.answer(
+            "❌ Что-то пошло не так при создании записи.\n"
+            "Пожалуйста, попробуйте начать заново с помощью команды /start.",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return
+
+    await state.clear()
+
+    await message.answer(
+        text=f"🎉 {customer_name}, ты успешно записан!\n\n"
+             f"📅 Дата: {selected_date}\n"
+             f"⏰ Время: {selected_time}\n\n"
+             "Ждем тебя в барбершопе! 🙌",
+        reply_markup=ReplyKeyboardRemove() 
     )

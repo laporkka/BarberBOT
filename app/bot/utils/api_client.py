@@ -84,7 +84,7 @@ class ApiClient:
         customer_tg_id: str,
         customer_name: str,
         customer_phone: str,
-        burber_id: int,
+        barber_id: int,
         service_id: int,
         start_at: datetime
     ) -> Dict[str, Any]:
@@ -92,7 +92,7 @@ class ApiClient:
             "customer_tg_id": customer_tg_id,
             "customer_name": customer_name,
             "customer_phone": customer_phone,
-            "burber_id": burber_id,
+            "burber_id": barber_id,
             "service_id": service_id,
             "start_at": start_at.isoformat()
         }
