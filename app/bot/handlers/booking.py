@@ -1,11 +1,13 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
-from datetime import datetime, timedelta, timezone
 from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from datetime import datetime, timedelta, timezone
 
 from app.bot.fsm import BookingState
 from app.bot.utils.api_client import api_client
 from app.bot.keycads.client import keyboards
+from app.bot.keycads.shedule import schedule_funcs
 
 
 router = Router()
@@ -33,7 +35,7 @@ async def barber_selected(callback: types.CallbackQuery, state: FSMContext):
 
     barber_id = int(callback.data.split("_")[1])
 
-    services = await api_client.get_all_service()
+    services = await api_client.get_all_services()
 
     await state.update_data(barber_id=barber_id)
     await state.set_state(BookingState.choose_service)
@@ -50,22 +52,7 @@ async def barber_selected(callback: types.CallbackQuery, state: FSMContext):
 async def service_selected(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
-    weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
-    dates_payload = []
-    now = datetime.now(timezone.utc).date()
-
-    for i in range(7):
-        date = now + timedelta(days=i)
-        
-        raw_date = date.strftime("%Y-%m-%d")
-        readable_date = date.strftime(f"{weekdays[date.weekday()]} (%d.%m)")
-
-        dates_payload.append(
-            {
-                "raw": raw_date,
-                "readable": readable_date
-            }
-        )
+    dates_payload = schedule_funcs.get_dates_payload()
 
     service_id = int(callback.data.split("_")[1])
     service = await api_client.get_service_by_id(service_id)
@@ -182,4 +169,178 @@ async def phone_selected(message: Message, state: FSMContext):
              f"⏰ Время: {selected_time}\n\n"
              "Ждем тебя в барбершопе! 🙌",
         reply_markup=ReplyKeyboardRemove() 
+    )
+
+
+@router.callback_query(BookingState.choose_service, F.data == "back_to_barbers")
+async def back_to_barbers(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    
+    await state.set_state(BookingState.choose_barber)
+    
+    barbers = await api_client.get_active_barbers()
+    markup = keyboards.get_barbers_keyboards(barbers)
+    
+    await callback.message.edit_text(
+        text="Выберите мастера:",
+        reply_markup=markup
+    )
+
+
+@router.callback_query(BookingState.choose_date, F.data == "back_to_services")
+async def back_to_services(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    
+    await state.set_state(BookingState.choose_service)
+    
+    services = await api_client.get_all_service()
+    markup = keyboards.get_services_keyboards(services)
+    
+    await callback.message.edit_text(
+        text="Выберите услугу:",
+        reply_markup=markup
+    )
+
+
+@router.callback_query(BookingState.choose_time, F.data == "back_to_dates")
+async def back_to_date(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+
+    await state.set_state(BookingState.choose_date)
+
+    dates_payload = schedule_funcs.get_dates_payload()
+    markup = keyboards.get_dates_keyboards(dates_payload)
+
+    await callback.message.edit_text(
+        text="Выберите время",
+        reply_markup=markup
+    )
+
+
+@router.callback_query(F.data == "cancel_booking")
+async def cancel_booking(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer("Запись отменена ❌")
+    
+    await state.clear()
+    
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📅 Записаться на стрижку", callback_data="start_booking")
+    builder.button(text="📋 Мои записи", callback_data="my_appointments")
+    builder.button(text="🗂️ Список услуг", callback_data="service_list")
+    builder.adjust(1)
+
+    await callback.message.edit_text(
+        text="Запись отменена. Вы вернулись в главное меню. Выберите действие:",
+        reply_markup=builder.as_markup()
+    )
+
+
+
+@router.callback_query(F.data == "my_appointments")
+async def view_my_appointments(callback: types.CallbackQuery, state: FSMContext):
+    callback.answer()
+
+    customer_tg_id = callback.from_user.id
+
+    appointments = await api_client.get_appointments_by_tg_id(customer_tg_id)
+
+    if not appointments:
+        builder = InlineKeyboardBuilder()
+        builder.button(text="⬅️ В главное меню", callback_data="back_to_main_menu")
+
+        await callback.message.edit_text(
+            text="📋 У тебя пока нет активных записей в наш барбершоп.",
+            reply_markup=builder.as_markup()
+        )
+
+        return
+
+    STATUS_MAPPER = {
+        "pending": "⏳ В ожидании подтверждения",
+        "confirmed": "🟢 Подтверждена",
+        "cancelled": "❌ Отменена",
+        "completed": "✨ Завершена"
+    }
+
+    text = "<b>📋 ТВОИ ЗАПИСИ:</b>\n\n"
+    has_active_bookings = False
+
+    for idx, app in enumerate(appointments, 1):
+        if app["status"] == "cancelled":
+            continue
+            
+        has_active_bookings = True
+    
+        start_at_dt = datetime.fromisoformat(app["start_at"])
+        date_str = start_at_dt.strftime("%d.%m.%Y")
+        time_str = start_at_dt.strftime("%H:%M")
+        
+        ru_status = STATUS_MAPPER.get(app["status"], "Неизвестный статус")
+        
+        text += (
+            f"{idx}. 📅 <b>Дата:</b> {date_str}\n"
+            f"   ⏰ <b>Время:</b> {time_str}\n"
+            f"   🆔 <b>Номер брони:</b> #{app['id']}\n"
+            f"   📊 <b>Статус:</b> {ru_status}\n\n"
+        )
+
+    if not has_active_bookings:
+        text = "📋 У тебя нет активных записей на ближайшее время."
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="⬅️ В главное меню", callback_data="back_to_main_menu")
+    builder.adjust(1)
+
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=builder.as_markup(),
+        parse_mode="HTML"
+    )
+
+
+@router.callback_query(F.data == "service_list")
+async def view_service_list(callback: types.CallbackQuery, state: FSMContext):
+    callback.answer()
+
+    services = await api_client.get_all_services()
+
+    if not services:
+        await callback.message.answer("📋 Прайс-лист сейчас пуст. Мы скоро добавим услуги!")
+        return
+    
+    text = "<b>✂️ НАШ ПРАЙС-ЛИСТ:</b>\n\n"
+    
+    for idx, service in enumerate(services, 1):
+        price_rub = service['price'] / 100  
+        text += (
+            f"{idx}. <b>{service['title']}</b>\n"
+            f"   ⏳ Длительность: {service['duration_min']} мин.\n"
+            f"   💰 Стоимость: {price_rub:.0f} руб.\n\n"
+        )
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="⬅️ В главное меню", callback_data="back_to_main_menu")
+    
+    await callback.message.edit_text(
+        text=text,
+        reply_markup=builder.as_markup(),
+        parse_mode="HTML"
+    )
+
+
+@router.callback_query(F.data == "back_to_main_menu")
+async def back_to_main_menu(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.clear()
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📅 Записаться на стрижку", callback_data="start_booking")
+    builder.button(text="📋 Мои записи", callback_data="my_appointments")
+    builder.button(text="🗂️ Список услуг", callback_data="service_list")
+    builder.adjust(1)
+
+    user_name = callback.from_user.first_name
+    await callback.message.edit_text(
+        text=f"Привет, {user_name}! 👋\nВы вернулись в главное меню. Выберите действие:",
+        reply_markup=builder.as_markup()
     )

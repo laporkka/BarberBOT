@@ -59,7 +59,11 @@ class ApiClient:
         return response
 
 
-    async def get_all_service(self) -> List[Dict[str, Any]]:
+    async def get_service_by_id(self, service_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("GET", f"/service/get/by_id/{service_id}")
+        return response
+      
+    async def get_all_services(self) -> List[Dict[str, Any]]:
         response = await self._send_request("GET", "/service/get/all")
         return response
 
@@ -78,6 +82,7 @@ class ApiClient:
 
         response = await self._send_request("POST", "/service/add/service", json=json_data)
         return response
+
 
     async def create_appointment(
         self, 
@@ -119,9 +124,5 @@ class ApiClient:
         response = await self._send_request("GET", f"/appointment/get/by_tg_id/{customer_tg_id}")
         return response
 
-    async def get_service_by_id(self, service_id: int) -> Dict[str, Any] | None:
-        response = await self._send_request("GET", f"/service/get/by_id/{service_id}")
-        return response
-    
 
 api_client = ApiClient()
