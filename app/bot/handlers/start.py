@@ -63,5 +63,3 @@ async def cmd_start(message: Message, state: FSMContext):
         f"Добро пожаловать в наш барбершоп. Выбери действие ниже, чтобы продолжить:",
         reply_markup=builder.as_markup()
     )
-
-    await state.set_state(BookingState.choose_barber)

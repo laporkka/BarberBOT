@@ -4,6 +4,8 @@ from typing import List, Dict, Any
 
 
 class Keyboards:
+
+    @staticmethod
     def get_barbers_keyboards(barbers: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -19,6 +21,7 @@ class Keyboards:
         return builder.as_markup()
 
 
+    @staticmethod
     def get_services_keyboards(services: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -36,6 +39,7 @@ class Keyboards:
         return builder.as_markup()
         
 
+    @staticmethod
     def get_dates_keyboards(date_list: List[Dict[str, str]]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -52,6 +56,7 @@ class Keyboards:
         return builder.as_markup()
 
 
+    @staticmethod
     def get_times_keyboards(available_slots: List[str]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
 
@@ -68,13 +73,14 @@ class Keyboards:
         return builder.as_markup()
 
 
+    @staticmethod
     def get_phone_keyboard() -> ReplyKeyboardMarkup:
         builder = ReplyKeyboardBuilder()
 
         builder.button(text="📱 Поделиться номером телефона", request_contact=True)
         builder.adjust(1)
 
-        builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
+        return builder.as_markup(resize_keyboard=True, one_time_keyboard=True, input_field_placeholder="Нажми на кнопку ниже 👇")
 
 
 keyboards = Keyboards()

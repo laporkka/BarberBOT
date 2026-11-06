@@ -50,6 +50,7 @@ async def get_barber_by_id(
     db: AsyncSession = Depends(get_db)
 ):
     response = await BarberRepository(db).get_barber_by_id(barber_id)
+
     if not response:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -65,6 +66,7 @@ async def get_barber_by_tg_id(
     db: AsyncSession = Depends(get_db)    
 ):
     response = await BarberRepository(db).get_barber_by_tg_id(barber_tg_id)
+
     if not response:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -73,3 +75,22 @@ async def get_barber_by_tg_id(
     
     return response
 
+
+@router.delete("/delete/by_id/{barber_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_barber_by_id(
+    barber_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    barber_repo = BarberRepository(db)
+
+    exist_barber = await barber_repo.get_barber_by_id(barber_id)
+
+    if not exist_barber:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Barber not found"
+        )
+
+    await barber_repo.delete_barber_by_id(exist_barber)
+
+    return None

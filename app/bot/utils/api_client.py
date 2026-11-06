@@ -81,7 +81,7 @@ class ApiClient:
 
     async def create_appointment(
         self, 
-        customer_tg_id: str,
+        customer_tg_id: int,
         customer_name: str,
         customer_phone: str,
         barber_id: int,
@@ -89,10 +89,10 @@ class ApiClient:
         start_at: datetime
     ) -> Dict[str, Any]:
         json_data = {
-            "customer_tg_id": customer_tg_id,
+            "customer_tg_id": str(customer_tg_id),
             "customer_name": customer_name,
             "customer_phone": customer_phone,
-            "burber_id": barber_id,
+            "barber_id": barber_id,
             "service_id": service_id,
             "start_at": start_at.isoformat()
         }

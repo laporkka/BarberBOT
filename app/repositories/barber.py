@@ -45,4 +45,7 @@ class BarberRepository:
         barbers = result.scalars().all()
 
         return barbers
-    
+
+    async def delete_barber_by_id(self, barber_in: Barber):
+        await self.db.delete(barber_in)
+        await self.db.commit()
