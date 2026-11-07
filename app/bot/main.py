@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 
 from app.core.config import settings
 from app.bot.utils.api_client import api_client
@@ -14,7 +14,7 @@ from app.bot.handlers.barber import router as barber_router
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=settings.BOT_TOKEN)
-storage = MemoryStorage()
+storage = RedisStorage.from_url(settings.redis_fsm_url)
 dp = Dispatcher(storage=storage)
 
 dp.include_router(start_router)
