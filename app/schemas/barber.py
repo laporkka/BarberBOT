@@ -7,6 +7,12 @@ class BarberCreate(BaseModel):
     is_active: bool
 
 
+class BarberUpdate(BaseModel):
+    name: str | None = None
+    tg_id: str | None = None
+    is_active: bool = True
+
+
 class BarberResponse(BaseModel):
     id: int
     name: str
