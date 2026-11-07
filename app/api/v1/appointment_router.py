@@ -49,3 +49,22 @@ async def get_client_appointments(
 ):
     appointments = await AppointmentRepository(db).get_appointments_by_tg_id(customer_tg_id)
     return appointments
+
+
+@router.get("/get/by_barber", response_model=list[AppointmentResponse], status_code=status.HTTP_200_OK)
+async def get_appointments_by_barber(
+    barber_id: int,
+    target_date: date,
+    db: AsyncSession = Depends(get_db)
+):
+    appointments = await AppointmentRepository(db).get_by_barber_and_date(barber_id, target_date)
+    return appointments
+
+
+@router.get("/get/all/by_date", response_model=list[AppointmentResponse], status_code=status.HTTP_200_OK)
+async def get_appointmens_by_date(
+    target_date: date,
+    db: AsyncSession = Depends(get_db)
+):
+    appointments = await AppointmentRepository(db).get_all_by_date(target_date)
+    return appointments

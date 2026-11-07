@@ -9,7 +9,7 @@ from app.repositories.barber import BarberRepository
 router = APIRouter(prefix="/barber", tags=["Barber"])
 
 
-@router.post("/add", response_model=BarberResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/add/barber", response_model=BarberResponse, status_code=status.HTTP_201_CREATED)
 async def create_barber(
     barber_in: BarberCreate,
     db: AsyncSession = Depends(get_db)
