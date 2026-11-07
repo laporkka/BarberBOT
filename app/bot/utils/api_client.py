@@ -124,5 +124,14 @@ class ApiClient:
         response = await self._send_request("GET", f"/appointment/get/by_tg_id/{customer_tg_id}")
         return response
 
+    async def get_appointments_by_barber(self, barber_id: int, target_date: date) -> List[Dict[str, Any]]:
+        params = {
+            "barber_id": barber_id,
+            "target_date": target_date.strftime("%Y-%m-%d")
+        }
+
+        response = await self._send_request("GET", "/appointment/get/by_barber", params=params)
+        return response
+
 
 api_client = ApiClient()

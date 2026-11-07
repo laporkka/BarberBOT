@@ -8,6 +8,7 @@ from app.bot.utils.api_client import api_client
 
 from app.bot.handlers.start import router as start_router
 from app.bot.handlers.booking import router as booking_router
+from app.bot.handlers.barber import router as barber_router
 
 
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +19,7 @@ dp = Dispatcher(storage=storage)
 
 dp.include_router(start_router)
 dp.include_router(booking_router)
-
+dp.include_router(barber_router)
 
 async def main():
     print("🚀 Telegram-бот BarberBOT успешно запущен в режиме Polling!")
