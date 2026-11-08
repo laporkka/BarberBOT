@@ -34,7 +34,7 @@ async def cmd_start(message: Message, state: FSMContext):
         )
 
         return
-
+    
     barber = await api_client.get_barber_by_tg_id(user_tg_id)
 
     if barber:

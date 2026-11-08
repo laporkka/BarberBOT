@@ -57,19 +57,28 @@ class Keyboards:
 
 
     @staticmethod
-    def get_times_keyboards(available_slots: List[str]) -> InlineKeyboardMarkup:
+    def get_times_keyboards(available_slots: list[str]) -> InlineKeyboardMarkup:
         builder = InlineKeyboardBuilder()
-
+        
         for slot in available_slots:
-            builder.button(
-                text=slot,
-                callback_data=f"time_{slot}"
-            )
+            builder.button(text=slot, callback_data=f"time_{slot}")
+            
+        time_rows = []
+        total_slots = len(available_slots)
+        
+        for _ in range(total_slots // 4):
+            time_rows.append(4)
+            
+        if total_slots % 4 > 0:
+            time_rows.append(total_slots % 4)
 
         builder.button(text="⬅️ Назад", callback_data="back_to_dates")
         builder.button(text="❌ Отмена", callback_data="cancel_booking")
-        builder.adjust(1)
-
+        
+        time_rows.append(1)
+        time_rows.append(1)
+        
+        builder.adjust(*time_rows)
         return builder.as_markup()
 
 

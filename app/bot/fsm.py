@@ -9,3 +9,11 @@ class BookingState(StatesGroup):
     get_name = State()
     get_phone = State()
     confirmation = State()
+
+
+class AdminState(StatesGroup):
+    get_barber_name = State()      
+    get_barber_tg_id = State()     
+    get_service_title = State()    
+    get_service_price = State()    
+    get_service_duration = State()

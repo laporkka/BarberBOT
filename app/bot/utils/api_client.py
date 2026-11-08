@@ -35,8 +35,13 @@ class ApiClient:
 
     async def get_active_barbers(self) -> List[Dict[str, Any]]:
         response = await self._send_request("GET", "/barber/get/all_active")
-        return response
+        return response or []
 
+
+    async def get_all_barbers(self) -> List[Dict[str, Any]]:
+        response = await self._send_request("GET", "/barber/get/all")
+        return response or []
+    
 
     async def get_barber_by_tg_id(self, tg_id: int) -> Dict[str, Any] | None:
         response = await self._send_request("GET", f"/barber/get/by_tg_id/{tg_id}")
@@ -55,16 +60,41 @@ class ApiClient:
             "is_active": is_active
         }
 
-        response = await self._send_request("POST", "/barber/add", json=json_data)
+        response = await self._send_request("POST", "/barber/add/barber", json=json_data)
+        return response
+
+
+    async def update_barber_name_by_id(self, barber_id: int, new_name: str) -> Dict[str, Any] | None:
+        json_data = {"new_name": new_name} 
+
+        response = await self._send_request("PATCH", f"/barber/{barber_id}/update-name", json=json_data)
+        return response
+
+
+    async def toggle_active_barber_by_id(self, barber_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("PATCH", f"/barber/{barber_id}/toggle-active")
         return response
 
 
     async def get_service_by_id(self, service_id: int) -> Dict[str, Any] | None:
         response = await self._send_request("GET", f"/service/get/by_id/{service_id}")
         return response
+
       
     async def get_all_services(self) -> List[Dict[str, Any]]:
         response = await self._send_request("GET", "/service/get/all")
+        return response
+
+
+    async def update_service_price_by_id(self, service_id: int, new_price) -> Dict[str, Any] | None:
+        json_data = {"new_price": new_price}
+
+        response = await self._send_request("PATCH", f"/service/{service_id}/update-price", json=json_data)
+        return response
+
+
+    async def toggle_active_service_by_id(self, service_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("PATCH", f"/service/{service_id}/toggle-active")
         return response
 
 
@@ -105,12 +135,13 @@ class ApiClient:
         response = await self._send_request("POST", "/appointment/add/appointment", json=json_data)
         return response
 
+
     async def get_available_time(
         self,
         duration_min: int,
         barber_id: int,
         target_data: date
-    ):
+    ) -> List[str]:
         params = {
             "duration_min": duration_min,
             "barber_id": barber_id,
@@ -118,11 +149,13 @@ class ApiClient:
         }
 
         response = await self._send_request("GET", "/appointment/get/available_time", params=params)
-        return response
+        return response or []
+
 
     async def get_appointments_by_tg_id(self, customer_tg_id: str) -> List[Dict[str, Any]]:
         response = await self._send_request("GET", f"/appointment/get/by_tg_id/{customer_tg_id}")
-        return response
+        return response or []
+
 
     async def get_appointments_by_barber(self, barber_id: int, target_date: date) -> List[Dict[str, Any]]:
         params = {
@@ -131,7 +164,14 @@ class ApiClient:
         }
 
         response = await self._send_request("GET", "/appointment/get/by_barber", params=params)
-        return response
+        return response or []
+
+
+    async def get_all_appointments_by_date(self, target_date: str) -> List[Dict[str, Any]]:
+        params = {"target_date": target_date}
+
+        response = await self._send_request("GET", "/appointment/get/all/by_date", params=params)
+        return response or []
 
 
 api_client = ApiClient()
