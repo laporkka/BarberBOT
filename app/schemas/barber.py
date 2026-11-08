@@ -4,13 +4,7 @@ from pydantic import BaseModel, Field, ConfigDict
 class BarberCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=50)
     tg_id: str 
-    is_active: bool
-
-
-class BarberUpdate(BaseModel):
-    name: str | None = None
-    tg_id: str | None = None
-    is_active: bool = True
+    is_active: bool = Field(True)
 
 
 class BarberResponse(BaseModel):

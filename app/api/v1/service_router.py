@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.service import ServiceCreate, ServiceResponse
@@ -64,3 +64,36 @@ async def get_all_services(
 ):
     response = await ServiceRepository(db).get_all_services()
     return response
+
+
+@router.patch("/{service_id}/update-price", response_model=ServiceResponse, status_code=status.HTTP_200_OK)
+async def update_service_price_by_id(
+    service_id: int,
+    new_price: int = Body(..., embed=True),
+    db: AsyncSession = Depends(get_db)
+):
+    service = await ServiceRepository(db).update_service_price(service_id, new_price)
+
+    if not service:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Service not found"
+        )
+
+    return service    
+
+
+@router.patch("/{service_id}/toggle-active", response_model=ServiceResponse, status_code=status.HTTP_200_OK)
+async def toggle_active_service_by_id(
+    service_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    service = await ServiceRepository(db).toggle_active_service(service_id)
+
+    if not service:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Service not found"
+        )
+
+    return service   

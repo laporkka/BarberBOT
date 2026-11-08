@@ -11,3 +11,4 @@ class Service(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     price: Mapped[int] = mapped_column(nullable=False)
     duration_min: Mapped[int] = mapped_column(nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)

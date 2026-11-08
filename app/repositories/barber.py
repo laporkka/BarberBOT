@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Sequence
 
-from app.schemas.barber import BarberCreate, BarberUpdate
+from app.schemas.barber import BarberCreate
 from app.models.barbers import Barber
 
 
@@ -46,21 +46,24 @@ class BarberRepository:
 
         return barbers
 
-    async def update_barber_by_id(self, barber_id: int, update_schema: BarberUpdate) -> Barber | None:
+    async def update_barber_by_id(self, barber_id: int, new_name: str) -> Barber | None:
         barber = await self.get_barber_by_id(barber_id)
 
         if not barber:
             return None
 
-        update_data = update_schema.model_dump(exclude_unset=True)
-
-        for key, value in update_data.items():
-            setattr(barber, key, value)
-
+        barber.name = new_name
         await self.db.commit()
+
         return barber
+
+    async def toggle_active_barber(self, barber_id: int) -> Barber | None:
+        barber = await self.get_barber_by_id(barber_id)
         
-        
-    async def delete_barber_by_id(self, barber_in: Barber):
-        await self.db.delete(barber_in)
+        if not barber:
+            return None
+
+        barber.is_active = not barber.is_active
         await self.db.commit()
+
+        return barber

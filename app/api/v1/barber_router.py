@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.barber import BarberCreate, BarberResponse, BarberUpdate
+from app.schemas.barber import BarberCreate, BarberResponse
 from app.core.database import get_db
 from app.repositories.barber import BarberRepository
 
@@ -76,13 +76,13 @@ async def get_barber_by_tg_id(
     return response
 
 
-@router.patch("/update/by_id/{barber_id}", response_model=BarberResponse, status_code=status.HTTP_200_OK)
-async def update_barber_by_tg_id(
+@router.patch("/{barber_id}/update-name", response_model=BarberResponse, status_code=status.HTTP_200_OK)
+async def update_barber_name_by_id(
     barber_id: int,
-    update_schema: BarberUpdate,
+    new_name: str = Body(..., embed=True),
     db: AsyncSession = Depends(get_db)
 ):
-    barber_update = await BarberRepository(db).update_barber_by_id(barber_id, update_schema)
+    barber_update = await BarberRepository(db).update_barber_by_id(barber_id, new_name)
 
     if not barber_update:
         raise HTTPException(
@@ -93,21 +93,17 @@ async def update_barber_by_tg_id(
     return barber_update
 
 
-@router.delete("/delete/by_id/{barber_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_barber_by_id(
+@router.patch("/{barber_id}/toggle-active", response_model=BarberResponse, status_code=status.HTTP_200_OK)
+async def toggle_active_barber_by_id(
     barber_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    barber_repo = BarberRepository(db)
+    barber_update = await BarberRepository(db).toggle_active_barber(barber_id)
 
-    exist_barber = await barber_repo.get_barber_by_id(barber_id)
-
-    if not exist_barber:
+    if not barber_update:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Barber not found"
         )
 
-    await barber_repo.delete_barber_by_id(exist_barber)
-
-    return None
+    return barber_update

@@ -33,11 +33,31 @@ class ServiceRepository:
     
             return service
 
-    
     async def get_service_by_title(self, service_title: str) -> Service | None:
         query = select(Service).filter(Service.title == service_title)
         result = await self.db.execute(query)
         service = result.scalar_one_or_none()
 
         return service 
-    
+
+    async def update_service_price(self, service_id: int, new_price: int) -> Service |None:
+        service = await self.get_service_by_id(service_id)
+
+        if not service:
+             return None
+
+        service.price = new_price
+        await self.db.commit()
+        
+        return service
+
+    async def toggle_active_service(self, service_id: int) -> Service | None:
+        service = await self.get_service_by_id(service_id)
+
+        if not service:
+                return None
+
+        service.is_active = not service.is_active
+        await self.db.commit()
+        
+        return service
