@@ -6,6 +6,7 @@ from app.schemas.appointment import AppointmentCreate, AppointmentResponse
 from app.core.database import get_db
 from app.repositories.appointment import AppointmentRepository
 from app.repositories.service import ServiceRepository
+from app.repositories.schedule import ScheduleRepository
 from app.services.schedule import ScheduleService
 
 
@@ -37,8 +38,9 @@ async def get_available_time(
     db: AsyncSession = Depends(get_db)
 ):
     appointment_repo = AppointmentRepository(db)
+    schedule_repo = ScheduleRepository(db)
     
-    available_time = await ScheduleService(appointment_repo).get_available_time(duration_min, barber_id, target_data)
+    available_time = await ScheduleService(appointment_repo, schedule_repo).get_available_time(duration_min, barber_id, target_data)
     return available_time
 
 
