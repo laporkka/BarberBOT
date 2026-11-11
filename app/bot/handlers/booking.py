@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.bot.fsm import BookingState
 from app.bot.utils.api_client import api_client
-from app.bot.keycads.client import keyboards
+from app.bot.keycads.client import client_keyboards
 from app.bot.keycads.shedule import schedule_funcs
 
 
@@ -21,7 +21,7 @@ async def start_booking(callback: types.CallbackQuery, state: FSMContext):
 
     await state.set_state(BookingState.choose_barber)
 
-    markup = keyboards.get_barbers_keyboards(barbers)
+    markup = client_keyboards.get_barbers_keyboards(barbers)
 
     await callback.message.edit_text(
         text="Выберите мастера",
@@ -40,7 +40,7 @@ async def barber_selected(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(barber_id=barber_id)
     await state.set_state(BookingState.choose_service)
 
-    markup = keyboards.get_services_keyboards(services)
+    markup = client_keyboards.get_services_keyboards(services)
 
     await callback.message.edit_text(
         text="Выберите услугу",
@@ -66,7 +66,7 @@ async def service_selected(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(service_id=service_id, duration_min=duration_min)
     await state.set_state(BookingState.choose_date)
 
-    markup = keyboards.get_dates_keyboards(dates_payload)
+    markup = client_keyboards.get_dates_keyboards(dates_payload)
 
     await callback.message.edit_text(
         text="Выберите дату",
@@ -95,7 +95,7 @@ async def date_selected(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(selected_date=selected_date)
     await state.set_state(BookingState.choose_time)
 
-    markup = keyboards.get_times_keyboards(available_slots)
+    markup = client_keyboards.get_times_keyboards(available_slots)
 
     await callback.message.edit_text(
         text="Выберите время",
@@ -122,7 +122,7 @@ async def name_selected(message: Message, state: FSMContext):
     await state.update_data(customer_name=client_name)
     await state.set_state(BookingState.get_phone)
 
-    markup = keyboards.get_phone_keyboard()
+    markup = client_keyboards.get_phone_keyboard()
 
     await message.answer(
         text=f"Принят, {client_name}! Теперь отправьте ваш номер телефона, нажав на кнопку ниже:",
@@ -179,7 +179,7 @@ async def back_to_barbers(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(BookingState.choose_barber)
     
     barbers = await api_client.get_active_barbers()
-    markup = keyboards.get_barbers_keyboards(barbers)
+    markup = client_keyboards.get_barbers_keyboards(barbers)
     
     await callback.message.edit_text(
         text="Выберите мастера:",
@@ -194,7 +194,7 @@ async def back_to_services(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(BookingState.choose_service)
     
     services = await api_client.get_all_service()
-    markup = keyboards.get_services_keyboards(services)
+    markup = client_keyboards.get_services_keyboards(services)
     
     await callback.message.edit_text(
         text="Выберите услугу:",
@@ -209,7 +209,7 @@ async def back_to_date(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(BookingState.choose_date)
 
     dates_payload = schedule_funcs.get_dates_payload()
-    markup = keyboards.get_dates_keyboards(dates_payload)
+    markup = client_keyboards.get_dates_keyboards(dates_payload)
 
     await callback.message.edit_text(
         text="Выберите время",

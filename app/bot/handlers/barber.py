@@ -1,13 +1,8 @@
 from aiogram import Router, F, types
-from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from datetime import datetime, timedelta, timezone
 
-from app.bot.fsm import BookingState
 from app.bot.utils.api_client import api_client
-from app.bot.keycads.client import keyboards
-from app.bot.keycads.shedule import schedule_funcs
 
 
 router = Router()

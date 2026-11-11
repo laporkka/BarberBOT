@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup
 from typing import List, Dict, Any
 
 
-class Keyboards:
+class ClientKeyboards:
 
     @staticmethod
     def get_barbers_keyboards(barbers: List[Dict[str, Any]]) -> InlineKeyboardMarkup:
@@ -92,4 +92,4 @@ class Keyboards:
         return builder.as_markup(resize_keyboard=True, one_time_keyboard=True, input_field_placeholder="Нажми на кнопку ниже 👇")
 
 
-keyboards = Keyboards()
+client_keyboards = ClientKeyboards()

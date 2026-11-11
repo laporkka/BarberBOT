@@ -17,3 +17,6 @@ class AdminState(StatesGroup):
     get_service_title = State()    
     get_service_price = State()    
     get_service_duration = State()
+    get_work_start = State()
+    get_work_end = State()
+    get_bulk_schedule = State()

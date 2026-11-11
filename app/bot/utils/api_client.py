@@ -1,6 +1,6 @@
 import httpx
 from typing import List, Dict, Any
-from datetime import datetime, date
+from datetime import datetime, date, time
 
 from app.core.config import settings
 
@@ -171,6 +171,52 @@ class ApiClient:
         params = {"target_date": target_date}
 
         response = await self._send_request("GET", "/appointment/get/all/by_date", params=params)
+        return response or []
+
+
+    async def get_all_schedules(self) -> List[Dict[str, Any]]:
+        response = await self._send_request("GET", "/schedule/get/all")
+        return response or []
+
+
+    async def get_schedule_by_day(self, working_day: int) -> Dict[str, Any]:
+        response = await self._send_request("GET", f"/schedule/get/by_day/{working_day}")
+        return response
+
+
+    async def toggle_schedule_by_day(self, working_day: int) -> Dict[str, Any]:
+        response = await self._send_request("PATCH", f"/schedule/{working_day}/toggle")
+        return response
+
+
+    async def update_time_by_day(
+        self,
+        working_day: int,
+        start_at: time | None = None,
+        end_at: time | None = None
+    ) -> Dict[str, Any]:
+        json_data = {}
+
+        if start_at is not None:
+            json_data["start_at"] = start_at.isoformat() if isinstance(start_at, time) else start_at
+        if end_at is not None:
+            json_data["end_at"] = end_at.isoformat() if isinstance(end_at, time) else end_at
+
+        response = await self._send_request("PATCH", f"/schedule/{working_day}/update-time", json=json_data)
+        return response
+
+
+    async def update_all_schedule_by_template(
+        self, 
+        start_at: time,
+        end_at: time
+    ) -> List[Dict[str, Any]]:
+        json_data = {
+            "start_at": start_at.isoformat() if isinstance(start_at, time) else start_at,
+            "end_at": end_at.isoformat() if isinstance(end_at, time) else end_at
+        }
+
+        response = await self._send_request("PATCH", "/schedule/update-all", json=json_data)
         return response or []
 
 

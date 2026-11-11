@@ -24,6 +24,7 @@ async def cmd_start(message: Message, state: FSMContext):
         builder.button(text="📊 Загрузка салона", callback_data="cabin_occupancy")
         builder.button(text="🗂️ Управление барберами", callback_data="barber_management")
         builder.button(text="🗂️ Управление услугами", callback_data="service_management")
+        builder.button(text="🕒 График работы салона", callback_data="schedule_management")
         builder.adjust(1)
 
         await message.answer(
