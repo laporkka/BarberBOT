@@ -161,6 +161,30 @@ async def phone_selected(message: Message, state: FSMContext):
         )
         return
 
+    try:
+        barber = await api_client.get_barber_by_id(barber_id)
+        service = await api_client.get_service_by_id(service_id)
+
+        if barber and barber.get("tg_id"):
+            service_title = service.get("title") if service else "Услуга" 
+            push_text = (
+                f"🔔 <b>НОВАЯ ЗАПИСЬ!</b>\n\n"
+                f"📅 <b>Дата:</b> {selected_date}\n"
+                f"⏰ <b>Время:</b> {selected_time}\n"
+                f"✂️ <b>Услуга:</b> {service_title}\n"
+                f"👤 <b>Клиент:</b> {customer_name}\n"
+                f"📞 <b>Телефон:</b> {customer_phone}"
+            )
+
+            await message.bot.send_message(
+                chat_id=barber.get("tg_id"),
+                text=push_text,
+                parse_mode="HTML"
+            )
+
+    except Exception as e:
+        print(f"⚠️ Не удалось отправить push-уведомление мастеру {barber_id}: {e}")
+
     await state.clear()
 
     await message.answer(

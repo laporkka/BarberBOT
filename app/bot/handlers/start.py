@@ -25,6 +25,26 @@ async def cmd_start(message: Message, state: FSMContext):
         builder.button(text="🗂️ Управление барберами", callback_data="barber_management")
         builder.button(text="🗂️ Управление услугами", callback_data="service_management")
         builder.button(text="🕒 График работы салона", callback_data="schedule_management")
+        builder.button(text="👔 Управление менеджерами", callback_data="manager_management")
+        builder.adjust(1)
+
+        await message.answer(
+            f"Привет, {user_name}! 👋\n"
+            f"Ты авторизован как суперадмин. Вот твое рабочее меню на сегодня:",
+            reply_markup=builder.as_markup(),
+            parse_mode="HTML"
+        )
+
+        return
+
+    manager = await api_client.get_manager_by_tg_id(user_tg_id)
+    
+    if manager and manager.get("is_active"):
+        builder = InlineKeyboardBuilder()
+        builder.button(text="📊 Загрузка салона", callback_data="cabin_occupancy")
+        builder.button(text="🗂️ Управление барберами", callback_data="barber_management")
+        builder.button(text="🗂️ Управление услугами", callback_data="service_management")
+        builder.button(text="🕒 График работы салона", callback_data="schedule_management")
         builder.adjust(1)
 
         await message.answer(
@@ -38,7 +58,7 @@ async def cmd_start(message: Message, state: FSMContext):
     
     barber = await api_client.get_barber_by_tg_id(user_tg_id)
 
-    if barber:
+    if barber and barber.get("is_active"):
         builder = InlineKeyboardBuilder()
         builder.button(text="📅 Мой день (Сегодня)", callback_data="barber_today")
         builder.button(text="📆 Расписание на завтра", callback_data="barber_tomorrow")

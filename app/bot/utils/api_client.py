@@ -56,13 +56,18 @@ class ApiClient:
     ) -> Dict[str, Any]:
         json_data = {
             "name": name,
-            "tg_id": tg_id,
+            "tg_id": str(tg_id),
             "is_active": is_active
         }
 
         response = await self._send_request("POST", "/barber/add/barber", json=json_data)
         return response
 
+
+    async def get_barber_by_id(self, barber_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("GET", f"/barber/get/by_id/{barber_id}")
+        return response
+    
 
     async def update_barber_name_by_id(self, barber_id: int, new_name: str) -> Dict[str, Any] | None:
         json_data = {"new_name": new_name} 
@@ -218,6 +223,54 @@ class ApiClient:
 
         response = await self._send_request("PATCH", "/schedule/update-all", json=json_data)
         return response or []
+
+
+    async def get_active_managers(self) -> List[Dict[str, Any]]:
+        response = await self._send_request("GET", "/manager/get/all_active")
+        return response or []
+
+
+    async def get_all_managers(self) -> List[Dict[str, Any]]:
+        response = await self._send_request("GET", "/manager/get/all")
+        return response or []
+
+
+    async def get_manager_by_tg_id(self, tg_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("GET", f"/manager/get/by_tg_id/{tg_id}")
+        return response
+
+
+    async def create_manager(
+        self, 
+        name: str, 
+        tg_id: int, 
+        is_active: bool
+    ) -> Dict[str, Any]:
+        json_data = {
+            "name": name,
+            "tg_id": str(tg_id),
+            "is_active": is_active
+        }
+
+        response = await self._send_request("POST", "/manager/add/manager", json=json_data)
+        return response
+
+
+    async def get_manager_by_id(self, manager_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("GET", f"/manager/get/by_id/{manager_id}")
+        return response
+
+
+    async def update_manager_name_by_id(self, manager_id: int, new_name: str) -> Dict[str, Any] | None:
+        json_data = {"new_name": new_name} 
+
+        response = await self._send_request("PATCH", f"/manager/{manager_id}/update-name", json=json_data)
+        return response
+
+
+    async def toggle_active_manager_by_id(self, manager_id: int) -> Dict[str, Any] | None:
+        response = await self._send_request("PATCH", f"/manager/{manager_id}/toggle-active")
+        return response
 
 
 api_client = ApiClient()

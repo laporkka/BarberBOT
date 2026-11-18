@@ -14,6 +14,7 @@ from app.models.barbers import Barber
 from app.models.services import Service
 from app.models.appointments import Appointment
 from app.models.schedule import WorkingSchedule
+from app.models.managers import Manager
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
