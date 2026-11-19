@@ -35,13 +35,15 @@ async def cmd_start(message: Message, state: FSMContext):
         )
 
         return
-    
+
+    """""
     barber = await api_client.get_barber_by_tg_id(user_tg_id)
 
     if barber:
         builder = InlineKeyboardBuilder()
         builder.button(text="📅 Мой день (Сегодня)", callback_data="barber_today")
         builder.button(text="📆 Расписание на завтра", callback_data="barber_tomorrow")
+        builder.button(text="🔒 Заблокировать время", callback_data="barber_block_start")
         builder.adjust(1)
 
         await message.answer(
@@ -52,7 +54,7 @@ async def cmd_start(message: Message, state: FSMContext):
         )
 
         return 
-    
+    """
     builder = InlineKeyboardBuilder()
     builder.button(text="📅 Записаться на стрижку", callback_data="start_booking")
     builder.button(text="📋 Мои записи", callback_data="my_appointments")

@@ -8,7 +8,7 @@ class ScheduleFuncs:
     def get_dates_payload() -> List[Dict[str, Any]]:
         weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
         dates_payload = []
-        now = datetime.now(timezone.utc).date()
+        now = datetime.now(timezone(timedelta(hours=3))).date()
 
         for i in range(7):
             date = now + timedelta(days=i)

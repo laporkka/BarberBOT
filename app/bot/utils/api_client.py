@@ -83,7 +83,7 @@ class ApiClient:
       
     async def get_all_services(self) -> List[Dict[str, Any]]:
         response = await self._send_request("GET", "/service/get/all")
-        return response
+        return response or []
 
 
     async def update_service_price_by_id(self, service_id: int, new_price) -> Dict[str, Any] | None:

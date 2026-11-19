@@ -1,3 +1,4 @@
+import re
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
@@ -115,7 +116,7 @@ async def time_selected(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer("Введите ваше имя для записи:")
 
 
-@router.message(BookingState.get_name)
+@router.message(BookingState.get_name, F.text)
 async def name_selected(message: Message, state: FSMContext):
     client_name = message.text
 
@@ -130,9 +131,14 @@ async def name_selected(message: Message, state: FSMContext):
     )
 
 
-@router.message(BookingState.get_phone, F.contact)
-async def phone_selected(message: Message, state: FSMContext):
-    customer_phone = message.contact.phone_number
+async def finalize_booking(message: Message, state: FSMContext, customer_phone: str):
+    cleaned = re.sub(r"[^\d+]", "", customer_phone)
+    
+    if not cleaned.startswith("+"):
+        cleaned = f"+{cleaned}"
+    
+    customer_phone = cleaned
+
     customer_tg_id = message.from_user.id
 
     user_data = await state.get_data()
@@ -142,7 +148,8 @@ async def phone_selected(message: Message, state: FSMContext):
     selected_date = user_data.get("selected_date") 
     selected_time = user_data.get("selected_time") 
 
-    start_at_datetime = datetime.fromisoformat(f"{selected_date}T{selected_time}:00")
+    salon_tz = timezone(timedelta(hours=3))
+    start_at_datetime = datetime.fromisoformat(f"{selected_date}T{selected_time}:00").replace(tzinfo=salon_tz)
 
     appointment = await api_client.create_appointment(
         customer_tg_id=customer_tg_id,
@@ -161,6 +168,29 @@ async def phone_selected(message: Message, state: FSMContext):
         )
         return
 
+    try:
+        barber = await api_client.get_barber_by_id(barber_id)
+        service = await api_client.get_service_by_id(service_id)
+
+        if barber and barber.get("tg_id"):
+            service_title = service.get("title") if service else "Услуга" 
+            push_text = (
+                f"🔔 <b>НОВАЯ ЗАПИСЬ!</b>\n\n"
+                f"📅 <b>Дата:</b> {selected_date}\n"
+                f"⏰ <b>Время:</b> {selected_time}\n"
+                f"✂️ <b>Услуга:</b> {service_title}\n"
+                f"👤 <b>Клиент:</b> {customer_name}\n"
+                f"📞 <b>Телефон:</b> {customer_phone}"
+            )
+
+            await message.bot.send_message(
+                chat_id=barber.get("tg_id"),
+                text=push_text,
+                parse_mode="HTML"
+            )
+    except Exception as e:
+        print(f"⚠️ Не удалось отправить push-уведомление мастеру {barber_id}: {e}")
+
     await state.clear()
 
     await message.answer(
@@ -170,6 +200,27 @@ async def phone_selected(message: Message, state: FSMContext):
              "Ждем тебя в барбершопе! 🙌",
         reply_markup=ReplyKeyboardRemove() 
     )
+
+
+@router.message(BookingState.get_phone, F.contact)
+async def phone_contact_selected(message: Message, state: FSMContext):
+    customer_phone = message.contact.phone_number 
+    await finalize_booking(message, state, customer_phone)
+
+
+@router.message(BookingState.get_phone, F.text)
+async def phone_text_selected(message: Message, state: FSMContext):
+    cleaned_phone = re.sub(r"[\s\-\(\)]", "", message.text.strip())
+    
+    if not re.match(r"^\+?\d{9,15}$", cleaned_phone):
+        await message.answer(
+            "❌ Неверный формат номера.\n"
+            "Нажмите на кнопку <b>«📱 Отправить номер телефона»</b> ниже или введите его вручную (например, <code>+375291234567</code>):",
+            parse_mode="HTML"
+        )
+        return
+
+    await finalize_booking(message, state, cleaned_phone)
 
 
 @router.callback_query(BookingState.choose_service, F.data == "back_to_barbers")
@@ -193,7 +244,7 @@ async def back_to_services(callback: types.CallbackQuery, state: FSMContext):
     
     await state.set_state(BookingState.choose_service)
     
-    services = await api_client.get_all_service()
+    services = await api_client.get_all_services()
     markup = client_keyboards.get_services_keyboards(services)
     
     await callback.message.edit_text(
@@ -212,7 +263,7 @@ async def back_to_date(callback: types.CallbackQuery, state: FSMContext):
     markup = client_keyboards.get_dates_keyboards(dates_payload)
 
     await callback.message.edit_text(
-        text="Выберите время",
+        text="Выберите дату",
         reply_markup=markup
     )
 
@@ -238,7 +289,7 @@ async def cancel_booking(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "my_appointments")
 async def view_my_appointments(callback: types.CallbackQuery, state: FSMContext):
-    callback.answer()
+    await callback.answer()
 
     customer_tg_id = callback.from_user.id
 
@@ -256,7 +307,7 @@ async def view_my_appointments(callback: types.CallbackQuery, state: FSMContext)
         return
 
     STATUS_MAPPER = {
-        "pending": "⏳ В ожидании подтверждения",
+        "pending": "🟢 Запись подтверждена",
         "confirmed": "🟢 Подтверждена",
         "cancelled": "❌ Отменена",
         "completed": "✨ Завершена"
@@ -271,7 +322,7 @@ async def view_my_appointments(callback: types.CallbackQuery, state: FSMContext)
             
         has_active_bookings = True
     
-        start_at_dt = datetime.fromisoformat(app["start_at"])
+        start_at_dt = datetime.fromisoformat(app["start_at"]).astimezone(timezone(timedelta(hours=3)))
         date_str = start_at_dt.strftime("%d.%m.%Y")
         time_str = start_at_dt.strftime("%H:%M")
         
@@ -300,7 +351,7 @@ async def view_my_appointments(callback: types.CallbackQuery, state: FSMContext)
 
 @router.callback_query(F.data == "service_list")
 async def view_service_list(callback: types.CallbackQuery, state: FSMContext):
-    callback.answer()
+    await callback.answer()
 
     services = await api_client.get_all_services()
 

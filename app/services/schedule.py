@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone, timedelta, time
 
 from app.repositories.appointment import AppointmentRepository
 from app.repositories.schedule import ScheduleRepository
@@ -23,11 +23,14 @@ class ScheduleService:
         bit_map = 0
 
         for app in booked_dates:
-            if app.status == "cancelled":
+            if app.status.value == "cancelled":
                 continue
 
-            start_idx = (app.start_at.hour * 60 + app.start_at.minute - work_start_min) // 30 
-            end_idx = (app.end_at.hour * 60 + app.end_at.minute - work_start_min) // 30 
+            local_start = app.start_at.astimezone(timezone(timedelta(hours=3)))
+            local_end = app.end_at.astimezone(timezone(timedelta(hours=3)))
+
+            start_idx = (local_start.hour * 60 + local_start.minute - work_start_min) // 30 
+            end_idx = (local_end.hour * 60 + local_end.minute - work_start_min) // 30 
             
             for idx in range(start_idx, end_idx):
                 bit_map |= (1 << idx)
@@ -35,6 +38,11 @@ class ScheduleService:
         available_slots = []
         slots_needed = duration_min // 30 
         total_slots = (work_end_min - work_start_min) // 30
+
+        salon_now = datetime.now(timezone(timedelta(hours=3)))
+        curr_date = salon_now.date()
+        curr_time = salon_now.time()
+        is_today = (curr_date == target_data)
 
         for slot_idx in range(total_slots - slots_needed + 1):
             service_mask = 0
@@ -44,9 +52,13 @@ class ScheduleService:
 
             if bit_map & service_mask == 0:
                 total_minutes = work_start_min + slot_idx * 30
+
                 hour = total_minutes // 60
                 minute = total_minutes % 60 
 
+                if is_today and time(hour, minute) <= curr_time:
+                    continue
+                    
                 time_str = f"{hour:02d}:{minute:02d}"
                 available_slots.append(time_str)
   

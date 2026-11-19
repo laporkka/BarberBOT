@@ -20,3 +20,9 @@ class AdminState(StatesGroup):
     get_work_start = State()
     get_work_end = State()
     get_bulk_schedule = State()
+
+
+class BarberState(StatesGroup):
+    choose_date = State()
+    choose_duration = State()
+    choose_time = State()

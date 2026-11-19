@@ -1,7 +1,7 @@
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from datetime import datetime, timezone, time
+from datetime import datetime, timezone, time, timedelta
 
 from app.bot.fsm import AdminState
 from app.bot.utils.api_client import api_client
@@ -33,13 +33,14 @@ async def send_admin_menu(message: types.Message | types.CallbackQuery, text: st
 @router.callback_query(F.data == "cabin_occupancy")
 async def show_cabin_occupancy(callback: types.CallbackQuery):
     await callback.answer()
-    
-    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
+    salon_now = datetime.now(timezone(timedelta(hours=3)))
+    today_str = salon_now.strftime("%Y-%m-%d")
+    
     appointments = await api_client.get_all_appointments_by_date(today_str)
     barbers = await api_client.get_active_barbers()
 
-    text = f"<b>📊 ЗАГРУЗКА САЛОНА НА СЕГОДНЯ ({datetime.now().strftime('%d.%m.%Y')}):</b>\n\n"
+    text = f"<b>📊 ЗАГРУЗКА САЛОНА НА СЕГОДНЯ ({salon_now.strftime('%d.%m.%Y')}):</b>\n\n"
 
     for barber in barbers:
         barber_apps = [a for a in appointments if a["barber_id"] == barber["id"] and a["status"] != "cancelled"]
@@ -50,7 +51,7 @@ async def show_cabin_occupancy(callback: types.CallbackQuery):
         else:
             text += f"   🔴 Активных записей: {len(barber_apps)}\n"
             for app in barber_apps:
-                start_dt = datetime.fromisoformat(app["start_at"])
+                start_dt = datetime.fromisoformat(app["start_at"]).astimezone(timezone(timedelta(hours=3)))
                 text += f"   • ⏰ {start_dt.strftime('%H:%M')} — {app['customer_name']} ({app['customer_phone']})\n"
 
         text += "───────────────────\n"
